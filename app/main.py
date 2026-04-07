@@ -101,17 +101,20 @@ def mock_send_email(recipient, template, payload):
 
 def require_login(f):
     """Decorator to require login."""
+
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if "user" not in session:
             return redirect(url_for("login"))
         return f(*args, **kwargs)
+
     return decorated_function
 
 
 # ============================================================================
 # UI Routes
 # ============================================================================
+
 
 @app.route("/")
 def index():
@@ -128,23 +131,28 @@ def login():
     if request.method == "POST":
         email = request.form.get("email", "").strip()
         password = request.form.get("password", "").strip()
-        
+
         if not email or not password:
             error = "Email and password are required"
         elif email not in VALID_USERS:
             error = "Invalid email or password"
-            audit_log("login_attempt_failed", {"email": email, "reason": "user_not_found"})
+            audit_log(
+                "login_attempt_failed", {"email": email, "reason": "user_not_found"}
+            )
         elif VALID_USERS[email]["password"] != password:
             error = "Invalid email or password"
-            audit_log("login_attempt_failed", {"email": email, "reason": "invalid_password"})
+            audit_log(
+                "login_attempt_failed", {"email": email, "reason": "invalid_password"}
+            )
         else:
             # Login successful
             session["user"] = email
             session["name"] = VALID_USERS[email]["name"]
             audit_log("login_successful", {"email": email}, username=email)
             return redirect(url_for("dashboard"))
-    
-    html = """
+
+    html = (
+        """
     <!DOCTYPE html>
     <html>
     <head>
@@ -161,7 +169,9 @@ def login():
     </head>
     <body>
         <h1>Login</h1>
-        """ + (f'<div class="error">{error}</div>' if error else "") + """
+        """
+        + (f'<div class="error">{error}</div>' if error else "")
+        + """
         <form method="post" class="login-form">
             <input type="email" name="email" placeholder="Email" required>
             <input type="password" name="password" placeholder="Password" required>
@@ -176,6 +186,7 @@ def login():
     </body>
     </html>
     """
+    )
     return html
 
 
@@ -184,7 +195,7 @@ def login():
 def dashboard():
     """Dashboard page."""
     username = session.get("name", "User")
-    
+
     html = f"""
     <!DOCTYPE html>
     <html>
@@ -222,12 +233,12 @@ def submit_form():
     """Form submission page."""
     success = False
     error = None
-    
+
     if request.method == "POST":
         name = request.form.get("name", "").strip()
         email = request.form.get("email", "").strip()
         message = request.form.get("message", "").strip()
-        
+
         if not name or not email or not message:
             error = "All fields are required"
         elif len(message) < 10:
@@ -238,25 +249,32 @@ def submit_form():
             forms = load_test_data("forms.json")
             if "submissions" not in forms:
                 forms["submissions"] = []
-            
-            forms["submissions"].append({
-                "timestamp": datetime.utcnow().isoformat(),
-                "name": name,
-                "email": email,
-                "message": message,
-                "submitted_by": session.get("user"),
-            })
-            
+
+            forms["submissions"].append(
+                {
+                    "timestamp": datetime.utcnow().isoformat(),
+                    "name": name,
+                    "email": email,
+                    "message": message,
+                    "submitted_by": session.get("user"),
+                }
+            )
+
             forms_file.write_text(json.dumps(forms, indent=2))
             mock_send_email(
                 email,
                 "form_submission_confirmation",
                 {"name": name, "submitted_by": session.get("user")},
             )
-            audit_log("form_submitted", {"name": name, "email": email}, username=session.get("user"))
+            audit_log(
+                "form_submitted",
+                {"name": name, "email": email},
+                username=session.get("user"),
+            )
             success = True
-    
-    html = f"""
+
+    html = (
+        f"""
     <!DOCTYPE html>
     <html>
     <head>
@@ -276,8 +294,12 @@ def submit_form():
         <h1>Submit Form</h1>
         <a href="{url_for('dashboard')}">← Back to Dashboard</a>
         
-        """ + (f'<div class="success">Form submitted successfully!</div>' if success else "") + """
-        """ + (f'<div class="error">{error}</div>' if error else "") + """
+        """
+        + ('<div class="success">Form submitted successfully!</div>' if success else "")
+        + """
+        """
+        + (f'<div class="error">{error}</div>' if error else "")
+        + """
         
         <form method="post" class="form-container">
             <input type="text" name="name" placeholder="Your Name" required>
@@ -288,6 +310,7 @@ def submit_form():
     </body>
     </html>
     """
+    )
     return html
 
 
@@ -296,7 +319,11 @@ def submit_form():
 def export_report():
     """Generate and download an export report."""
     export_file, submissions = write_export_file()
-    audit_log("export_generated", {"file": "export.csv", "rows": len(submissions)}, username=session.get("user"))
+    audit_log(
+        "export_generated",
+        {"file": "export.csv", "rows": len(submissions)},
+        username=session.get("user"),
+    )
 
     html = f"""
     <!DOCTYPE html>
@@ -333,33 +360,39 @@ def logout():
 # API Routes
 # ============================================================================
 
+
 @app.route("/api/auth/login", methods=["POST"])
 def api_login():
     """API login endpoint."""
     data = request.get_json()
     email = data.get("email", "").strip()
     password = data.get("password", "").strip()
-    
+
     if not email or not password:
         return jsonify({"error": "Email and password are required"}), 400
-    
+
     if email not in VALID_USERS:
         audit_log("api_login_failed", {"email": email, "reason": "user_not_found"})
         return jsonify({"error": "Invalid email or password"}), 401
-    
+
     if VALID_USERS[email]["password"] != password:
         audit_log("api_login_failed", {"email": email, "reason": "invalid_password"})
         return jsonify({"error": "Invalid email or password"}), 401
-    
+
     audit_log("api_login_successful", {"email": email}, username=email)
-    return jsonify({
-        "success": True,
-        "user": {
-            "email": email,
-            "name": VALID_USERS[email]["name"],
-        },
-        "token": f"token-{email}-{datetime.utcnow().isoformat()}",
-    }), 200
+    return (
+        jsonify(
+            {
+                "success": True,
+                "user": {
+                    "email": email,
+                    "name": VALID_USERS[email]["name"],
+                },
+                "token": f"token-{email}-{datetime.utcnow().isoformat()}",
+            }
+        ),
+        200,
+    )
 
 
 @app.route("/api/forms", methods=["POST"])
@@ -369,7 +402,7 @@ def api_submit_form():
     name = data.get("name", "").strip()
     email = data.get("email", "").strip()
     message = data.get("message", "").strip()
-    
+
     errors = {}
     if not name:
         errors["name"] = "Name is required"
@@ -379,22 +412,24 @@ def api_submit_form():
         errors["message"] = "Message is required"
     elif len(message) < 10:
         errors["message"] = "Message must be at least 10 characters"
-    
+
     if errors:
         return jsonify({"error": "Validation failed", "details": errors}), 400
-    
+
     forms = load_test_data("forms.json")
     if "submissions" not in forms:
         forms["submissions"] = []
-    
-    forms["submissions"].append({
-        "timestamp": datetime.utcnow().isoformat(),
-        "name": name,
-        "email": email,
-        "message": message,
-        "submitted_by": "api",
-    })
-    
+
+    forms["submissions"].append(
+        {
+            "timestamp": datetime.utcnow().isoformat(),
+            "name": name,
+            "email": email,
+            "message": message,
+            "submitted_by": "api",
+        }
+    )
+
     forms_file = DATA_DIR / "forms.json"
     forms_file.write_text(json.dumps(forms, indent=2))
     mock_send_email(
@@ -403,7 +438,7 @@ def api_submit_form():
         {"name": name, "submitted_by": "api"},
     )
     audit_log("api_form_submitted", {"name": name}, username="api")
-    
+
     return jsonify({"success": True, "message": "Form submitted"}), 201
 
 
@@ -413,23 +448,33 @@ def api_export():
     export_file, submissions = write_export_file()
     audit_log("api_export_requested", {"rows": len(submissions)}, username="api")
 
-    return jsonify({
-        "success": True,
-        "export_file": export_file.name,
-        "total_records": len(submissions),
-        "timestamp": datetime.utcnow().isoformat(),
-    }), 200
+    return (
+        jsonify(
+            {
+                "success": True,
+                "export_file": export_file.name,
+                "total_records": len(submissions),
+                "timestamp": datetime.utcnow().isoformat(),
+            }
+        ),
+        200,
+    )
 
 
 @app.route("/api/users", methods=["GET"])
 def api_list_users():
     """API endpoint to list users (for testing)."""
-    return jsonify({
-        "users": [
-            {"email": email, "name": data["name"]}
-            for email, data in VALID_USERS.items()
-        ]
-    }), 200
+    return (
+        jsonify(
+            {
+                "users": [
+                    {"email": email, "name": data["name"]}
+                    for email, data in VALID_USERS.items()
+                ]
+            }
+        ),
+        200,
+    )
 
 
 if __name__ == "__main__":

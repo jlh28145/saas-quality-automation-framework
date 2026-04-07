@@ -13,10 +13,10 @@ AUTH_LOGIN_RESPONSE_SCHEMA = {
             "properties": {
                 "email": {"type": "string"},
                 "name": {"type": "string"},
-            }
+            },
         },
         "token": {"type": "string"},
-    }
+    },
 }
 
 AUTH_ERROR_RESPONSE_SCHEMA = {
@@ -24,5 +24,5 @@ AUTH_ERROR_RESPONSE_SCHEMA = {
     "required": ["error"],
     "properties": {
         "error": {"type": "string"},
-    }
+    },
 }

@@ -10,7 +10,9 @@ import pytest
 
 @pytest.mark.api
 @pytest.mark.data_variation
-def test_api_form_submission_accepts_seeded_faker_payload(forms_client, fake_data, fake_data_seed):
+def test_api_form_submission_accepts_seeded_faker_payload(
+    forms_client, fake_data, fake_data_seed
+):
     """Submit a valid seeded Faker payload and verify it is accepted."""
     name = fake_data.name()
     email = fake_data.email()
@@ -18,7 +20,7 @@ def test_api_form_submission_accepts_seeded_faker_payload(forms_client, fake_dat
 
     result = forms_client.submit_form(name, email, message)
 
-    assert result["status_code"] == 201, (
-        f"Seed {fake_data_seed} produced an unexpected failure: {result['body']}"
-    )
+    assert (
+        result["status_code"] == 201
+    ), f"Seed {fake_data_seed} produced an unexpected failure: {result['body']}"
     assert result["body"]["success"] is True

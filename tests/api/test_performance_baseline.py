@@ -28,5 +28,7 @@ def test_api_login_performance_baseline(auth_client):
     average_duration = sum(durations) / len(durations)
     worst_case = max(durations)
 
-    assert average_duration < 0.5, f"Average login latency too high: {average_duration:.3f}s"
+    assert (
+        average_duration < 0.5
+    ), f"Average login latency too high: {average_duration:.3f}s"
     assert worst_case < 1.0, f"Worst-case login latency too high: {worst_case:.3f}s"

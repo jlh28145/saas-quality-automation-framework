@@ -11,7 +11,7 @@ logger = get_logger("exports_client")
 
 class ExportsClient(BaseClient):
     """Client for exports endpoints."""
-    
+
     def request_export(self) -> Dict[str, Any]:
         """Request an export."""
         logger.info("Requesting export")

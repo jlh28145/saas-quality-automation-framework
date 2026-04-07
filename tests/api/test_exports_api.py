@@ -6,7 +6,10 @@ from pathlib import Path
 
 import pytest
 
-from src.api.assertions.response_assertions import assert_json_field_equals, assert_status_code
+from src.api.assertions.response_assertions import (
+    assert_json_field_equals,
+    assert_status_code,
+)
 from src.api.assertions.schema_assertions import assert_schema_valid
 from src.api.schemas.export_schema import EXPORT_RESPONSE_SCHEMA
 

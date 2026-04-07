@@ -8,7 +8,7 @@ FORM_SUBMIT_SUCCESS_SCHEMA = {
     "properties": {
         "success": {"type": "boolean"},
         "message": {"type": "string"},
-    }
+    },
 }
 
 FORM_VALIDATION_ERROR_SCHEMA = {
@@ -17,5 +17,5 @@ FORM_VALIDATION_ERROR_SCHEMA = {
     "properties": {
         "error": {"type": "string"},
         "details": {"type": "object"},
-    }
+    },
 }

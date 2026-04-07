@@ -10,5 +10,5 @@ EXPORT_RESPONSE_SCHEMA = {
         "export_file": {"type": "string"},
         "total_records": {"type": "integer"},
         "timestamp": {"type": "string"},
-    }
+    },
 }

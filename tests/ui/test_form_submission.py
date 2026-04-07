@@ -31,7 +31,9 @@ async def test_form_submission_with_valid_data(login_page, form_page):
 
 @pytest.mark.ui
 @pytest.mark.asyncio
-async def test_form_submission_with_short_message_shows_validation_error(login_page, form_page):
+async def test_form_submission_with_short_message_shows_validation_error(
+    login_page, form_page
+):
     """Test validation feedback for an invalid form submission."""
     await login_as_default_user(login_page)
     await form_page.navigate()
@@ -39,4 +41,6 @@ async def test_form_submission_with_short_message_shows_validation_error(login_p
     await form_page.submit_form("UI Test User", "ui@example.com", "short")
 
     assert await form_page.is_error_displayed()
-    assert "Message must be at least 10 characters" in await form_page.get_error_message()
+    assert (
+        "Message must be at least 10 characters" in await form_page.get_error_message()
+    )

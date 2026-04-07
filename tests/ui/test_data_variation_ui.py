@@ -17,7 +17,9 @@ async def login_as_default_user(login_page):
 @pytest.mark.ui
 @pytest.mark.data_variation
 @pytest.mark.asyncio
-async def test_ui_form_submission_accepts_seeded_faker_data(login_page, form_page, fake_data, fake_data_seed):
+async def test_ui_form_submission_accepts_seeded_faker_data(
+    login_page, form_page, fake_data, fake_data_seed
+):
     """Submit a valid seeded Faker payload through the UI."""
     await login_as_default_user(login_page)
     await form_page.navigate()

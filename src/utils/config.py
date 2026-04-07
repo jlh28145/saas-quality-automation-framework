@@ -15,12 +15,14 @@ class Config:
 
     def __init__(self, environment: str = "dev"):
         """Initialize config for the given environment."""
-        selected_environment = environment or os.getenv("ENV") or os.getenv("TEST_ENV") or "dev"
+        selected_environment = (
+            environment or os.getenv("ENV") or os.getenv("TEST_ENV") or "dev"
+        )
         self.environment = selected_environment
         self.config_dir = Path(__file__).parent.parent.parent / "config"
         self._config: Dict[str, Any] = {}
         self._load_config()
-    
+
     def _load_config(self) -> None:
         """Load configuration from YAML files."""
         settings_file = self.config_dir / "settings.yaml"
@@ -63,7 +65,9 @@ _config = None
 def get_config(environment: str = None) -> Config:
     """Get or create config instance."""
     global _config
-    requested_environment = environment or os.getenv("ENV") or os.getenv("TEST_ENV") or "dev"
+    requested_environment = (
+        environment or os.getenv("ENV") or os.getenv("TEST_ENV") or "dev"
+    )
     if _config is None or _config.environment != requested_environment:
         _config = Config(requested_environment)
     return _config
