@@ -3,13 +3,14 @@ Simple SaaS-style Flask application for testing demonstration.
 Supports UI and API testing with deterministic behaviors.
 """
 
+import csv
 import json
 import os
 from datetime import datetime
 from functools import wraps
 from pathlib import Path
 
-from flask import Flask, render_template_string, request, jsonify, session, redirect, url_for
+from flask import Flask, jsonify, redirect, request, session, url_for
 
 app = Flask(__name__)
 app.secret_key = "test-secret-key-do-not-use-in-production"
@@ -22,13 +23,12 @@ LOGS_DIR = REPORTS_DIR / "logs"
 LOGS_DIR.mkdir(parents=True, exist_ok=True)
 REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 
-# Test data
 VALID_USERS = {
     "testuser@example.com": {"password": "password123", "name": "Test User"},
     "admin@example.com": {"password": "admin123", "name": "Admin User"},
 }
 
-# Load test data from JSON files
+
 def load_test_data(filename):
     """Load test data from data directory."""
     path = DATA_DIR / filename
@@ -36,6 +36,28 @@ def load_test_data(filename):
         with open(path) as f:
             return json.load(f)
     return {}
+
+
+def write_export_file():
+    """Generate the CSV export file from stored submissions."""
+    forms_data = load_test_data("forms.json")
+    submissions = forms_data.get("submissions", [])
+
+    export_file = REPORTS_DIR / "export.csv"
+    with open(export_file, "w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=["timestamp", "name", "email", "message"])
+        writer.writeheader()
+        for row in submissions:
+            writer.writerow(
+                {
+                    "timestamp": row.get("timestamp", ""),
+                    "name": row.get("name", ""),
+                    "email": row.get("email", ""),
+                    "message": row.get("message", ""),
+                }
+            )
+
+    return export_file, submissions
 
 
 def audit_log(action, details, username="anonymous"):
@@ -49,6 +71,32 @@ def audit_log(action, details, username="anonymous"):
     log_file = LOGS_DIR / "audit.log"
     with open(log_file, "a") as f:
         f.write(json.dumps(log_entry) + "\n")
+
+
+def mock_send_email(recipient, template, payload):
+    """Simulate an external email provider with deterministic local output."""
+    status = "sent"
+    if os.getenv("MOCK_EMAIL_MODE", "success").lower() == "fail":
+        status = "failed"
+
+    email_entry = {
+        "timestamp": datetime.utcnow().isoformat(),
+        "recipient": recipient,
+        "template": template,
+        "status": status,
+        "payload": payload,
+    }
+
+    email_log = LOGS_DIR / "mock_email.log"
+    with open(email_log, "a") as f:
+        f.write(json.dumps(email_entry) + "\n")
+
+    audit_log(
+        f"mock_email_{status}",
+        {"recipient": recipient, "template": template},
+        username="mock-email-service",
+    )
+    return status
 
 
 def require_login(f):
@@ -200,6 +248,11 @@ def submit_form():
             })
             
             forms_file.write_text(json.dumps(forms, indent=2))
+            mock_send_email(
+                email,
+                "form_submission_confirmation",
+                {"name": name, "submitted_by": session.get("user")},
+            )
             audit_log("form_submitted", {"name": name, "email": email}, username=session.get("user"))
             success = True
     
@@ -242,22 +295,9 @@ def submit_form():
 @require_login
 def export_report():
     """Generate and download an export report."""
-    import csv
-    from io import StringIO
-    
-    # Create a CSV export
-    forms_data = load_test_data("forms.json")
-    submissions = forms_data.get("submissions", [])
-    
-    export_file = REPORTS_DIR / "export.csv"
-    with open(export_file, "w", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=["timestamp", "name", "email", "message"])
-        writer.writeheader()
-        for row in submissions:
-            writer.writerow(row)
-    
+    export_file, submissions = write_export_file()
     audit_log("export_generated", {"file": "export.csv", "rows": len(submissions)}, username=session.get("user"))
-    
+
     html = f"""
     <!DOCTYPE html>
     <html>
@@ -352,10 +392,16 @@ def api_submit_form():
         "name": name,
         "email": email,
         "message": message,
+        "submitted_by": "api",
     })
     
     forms_file = DATA_DIR / "forms.json"
     forms_file.write_text(json.dumps(forms, indent=2))
+    mock_send_email(
+        email,
+        "api_form_submission_confirmation",
+        {"name": name, "submitted_by": "api"},
+    )
     audit_log("api_form_submitted", {"name": name}, username="api")
     
     return jsonify({"success": True, "message": "Form submitted"}), 201
@@ -364,14 +410,12 @@ def api_submit_form():
 @app.route("/api/export", methods=["POST"])
 def api_export():
     """API export endpoint."""
-    forms_data = load_test_data("forms.json")
-    submissions = forms_data.get("submissions", [])
-    
+    export_file, submissions = write_export_file()
     audit_log("api_export_requested", {"rows": len(submissions)}, username="api")
-    
+
     return jsonify({
         "success": True,
-        "export_file": "export.csv",
+        "export_file": export_file.name,
         "total_records": len(submissions),
         "timestamp": datetime.utcnow().isoformat(),
     }), 200
@@ -389,4 +433,4 @@ def api_list_users():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host="127.0.0.1", port=5000)
+    app.run(debug=False, use_reloader=False, host="127.0.0.1", port=5000)

@@ -1,5 +1,7 @@
 base_url: "http://localhost:5000"
 api_base_url: "http://localhost:5000/api"
 headless: false
+browser: "chromium"
 slow_mo: 0
 timeout: 5000  # milliseconds
+screenshot_on_failure: true

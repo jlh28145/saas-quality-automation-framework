@@ -1,0 +1,10 @@
+.git
+.gitignore
+.venv
+.pytest_cache
+__pycache__
+reports
+allure-results
+.mypy_cache
+.ruff_cache
+.codex

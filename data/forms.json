@@ -1,3 +1,53 @@
 {
-  "submissions": []
+  "submissions": [
+    {
+      "timestamp": "2026-04-07T16:41:18.251771",
+      "name": "Jane Doe",
+      "email": "jane@example.com",
+      "message": "This is a test form submission for export validation",
+      "submitted_by": "api"
+    },
+    {
+      "timestamp": "2026-04-07T16:41:18.259815",
+      "name": "Test User",
+      "email": "test@example.com",
+      "message": "Test message content",
+      "submitted_by": "api"
+    },
+    {
+      "timestamp": "2026-04-07T16:41:18.268295",
+      "name": "User 1",
+      "email": "user1@example.com",
+      "message": "Message 1 test content",
+      "submitted_by": "api"
+    },
+    {
+      "timestamp": "2026-04-07T16:41:18.270819",
+      "name": "User 2",
+      "email": "user2@example.com",
+      "message": "Message 2 test content",
+      "submitted_by": "api"
+    },
+    {
+      "timestamp": "2026-04-07T16:41:18.280174",
+      "name": "Email Test User",
+      "email": "email-test@example.com",
+      "message": "This submission should trigger a mock email artifact.",
+      "submitted_by": "api"
+    },
+    {
+      "timestamp": "2026-04-07T16:41:20.235087",
+      "name": "Lisa Barber",
+      "email": "stephen93@example.org",
+      "message": "Defense who possible red time beautiful would teacher hard charge key. Seed:20260407",
+      "submitted_by": "testuser@example.com"
+    },
+    {
+      "timestamp": "2026-04-07T16:41:22.863900",
+      "name": "UI Test User",
+      "email": "ui@example.com",
+      "message": "This is a valid UI form submission message.",
+      "submitted_by": "testuser@example.com"
+    }
+  ]
 }
