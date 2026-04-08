@@ -1,0 +1,15 @@
+playwright
+pytest
+pytest-asyncio
+pytest-html
+pytest-xdist
+allure-pytest
+requests
+PyYAML
+jsonschema
+Faker
+black
+ruff
+pre-commit
+flask
+python-dotenv

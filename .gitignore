@@ -49,6 +49,8 @@ coverage.xml
 *.py.cover
 .hypothesis/
 .pytest_cache/
+reports/
+allure-results/
 cover/
 
 # Translations
@@ -200,6 +202,10 @@ cython_debug/
 #  refer to https://docs.cursor.com/context/ignore-files
 .cursorignore
 .cursorindexingignore
+
+# Codex workspace metadata
+.codex
+.codex/
 
 # Marimo
 marimo/_static/
